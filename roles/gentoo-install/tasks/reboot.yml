@@ -1,0 +1,7 @@
+---
+# tasks file for rebooting
+- name: Reboot System
+  command: reboot
+
+- name: Wait for system to become available
+  wait_for_connection:

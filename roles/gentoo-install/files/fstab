@@ -1,0 +1,3 @@
+LABEL=Boot           /boot   ext4    noauto,noatime     1 2
+LABEL=Swap           none    swap    sw                 0 0
+LABEL=Root           /       ext4    noatime            0 1

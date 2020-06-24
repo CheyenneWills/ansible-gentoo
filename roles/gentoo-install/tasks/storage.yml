@@ -1,0 +1,126 @@
+- stat: path=/tmp/parted_is_done
+  register: parted_is_done
+  tags:
+    - storage
+
+#TODO: port to module parted when issues will be fixed
+# https://github.com/ansible/ansible/issues/26905
+# https://github.com/ansible/ansible/issues/23914
+# https://github.com/ansible/ansible/issues/27841
+# https://github.com/ansible/ansible/issues/26890
+
+#- name: Make Partition Labels
+#  command: "parted -s {{ main_disk }} mklabel gpt"
+#  when: parted_is_done.stat.exists == False
+#  tags:
+#    - storage
+
+#- name: Create Grub BIOS Partition
+#  when: parted_is_done.stat.exists == False
+#  parted:
+#    device: "{{ main_disk }}"
+#   number: 1
+#    part_end: 1MiB
+#    flags: [ bios_grub ]
+#    state: present
+#    unit: MiB
+#    label: gpt
+#  tags:
+#    - storage
+  
+- name: Create Boot Partition
+  when: parted_is_done.stat.exists == False
+  parted:
+    device: "{{ main_disk }}"
+    number: 1
+    part_end: 150MiB
+    state: present
+    flags: [boot]
+  tags:
+    - storage
+
+- name: Create Swap Partition
+  when: parted_is_done.stat.exists == False
+  parted:
+    device: "{{ main_disk }}"
+    number: 2
+    part_start: 150MiB
+    part_end: "{{ (swap_size | int | abs) + 150 }}MiB"
+    unit: MiB
+    state: present
+  tags:
+    - storage
+
+- name: Create Primary Partition
+  when: parted_is_done.stat.exists == False
+  parted:
+    device: "{{ main_disk }}"
+    number: 3
+    part_start: "{{ (swap_size | int | abs) + 150 }}MiB"
+    part_end: "{{ root_size }}"
+    unit: MiB
+    state: present
+  tags:
+    - storage
+
+- file:
+    path: /tmp/parted_is_done
+    state: touch
+  tags:
+    - storage
+
+- name: Format Boot Partition
+  filesystem:
+    fstype: "{{ fstype }}"
+    dev: "{{ main_disk }}1"
+    force: "{{ force_format }}"
+    opts: -L Boot
+  tags:
+    - storage
+
+- name: Format Swap Partition
+  command: "mkswap {{ main_disk }}2 -L Swap"
+  tags:
+    - storage
+
+- name: Format Root Partition
+  filesystem: 
+    fstype: "{{ fstype }}"
+    dev: "{{ main_disk }}3"
+    force: "{{ force_format }}"
+    opts: -L Root
+  tags:
+    - storage
+
+- name: Mount root
+  mount:
+    path: /mnt/gentoo
+    src: "{{ main_disk }}3"
+    fstab: /tmp/tmp_fstab
+    fstype: "{{ fstype }}"
+    state: mounted
+  tags:
+    - storage
+
+- name: Create mountpoints
+  file:
+    path: /mnt/gentoo/boot
+    state: directory
+  tags:
+    - storage
+
+- name: Mount boot
+  mount:
+    path: /mnt/gentoo/boot
+    src: "{{ main_disk }}1"
+    fstab: /tmp/tmp_fstab
+    fstype: "{{ fstype }}"
+    state: mounted
+  tags:
+    - storage
+
+- file:
+    path: /tmp/storage_completed
+    state: touch
+  tags:
+    - storage

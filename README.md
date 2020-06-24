@@ -1,31 +1,12 @@
-Ansible Sandbox
+Ansible Gentoo
 ===============
 
-Ansible Sandbox is a collection of plays that demonstrate various roles I’ve
-created.
+This is a heavily modified and tailored version of the ansible-sandbox gentoo roles created by James A. Kyle (https://github.com/jameskyle)
 
-Dependencies
-------------
 
-Required roles are hosted on github and can be found at.
-
-- jameskyle/ansible-common
-- jameskyle/ansible-docker
-- jameskyle/ansible-kubernetes
-- jameskyle/ansible-jkyle
-
-Example Playbooks
------------------
-
-Example playbooks are found in the ‘playbooks’ directory. So far, there are
-
-jkyle
-    A playbook that deploys the jkyle user and configures his home environment
-    using dotfiles from a git repository.
-
-kubernetes
-    A playbook that deploys a docker + kubernetes cluster on bare metal.
-    Primarily targets RHEL based systems.
+TODO:
+    - continue cleanup
+    - Update documentation
 
 License
 -------
@@ -34,6 +15,11 @@ BSD
 
 Author Information
 ------------------
+
+Cheyenne Wills
+cheyenne.wills@gmail.com
+
+Based on work by 
 
 James A. Kyle  
 james@jameskyle.org  

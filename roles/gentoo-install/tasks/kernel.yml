@@ -1,0 +1,24 @@
+- name: Update license statement in make.conf
+  lineinfile:
+    path: /mnt/gentoo/etc/portage/make.conf
+    regex: '^\s*ACCEPT_LICENSE'
+    state: present
+    line: 'ACCEPT_LICENSE="* -@EULA"'
+
+
+- name: Emerge Gentoo Sources
+  command: chroot /mnt/gentoo bash -c 'source /etc/profile; emerge gentoo-sources' creates=/mnt/gentoo/usr/src/linux/arch
+  tags:
+    - kernel
+
+- name: Copy linux config
+  copy:
+    src: "kernels/{{ kernel_config }}"
+    dest: /mnt/gentoo/usr/src/linux/.config
+
+- name: Build kernel
+  command: chroot /mnt/gentoo bash -c 'source /etc/profile; cd /usr/src/linux; make olddefconfig; make {{ make_opts }} bzImage modules install modules_install'
+
+- file:
+    path: /tmp/kernel_completed
+    state: touch

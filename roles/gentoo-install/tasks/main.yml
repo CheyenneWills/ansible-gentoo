@@ -1,0 +1,52 @@
+---
+
+# Phase 1
+# Preform initial install on a running minimal-install gentoo system
+# Before running this task, manually:
+#  - Update inventory with:
+#     - ip address of system 
+#     - Target disk device (e.g. /dev/vda)
+#     - Network device (e.g. eth0)
+#  - start sshd on system (/etc/init.d/sshd start)
+#  - set root's password (passwd)
+
+# tasks file for phase1
+- name: Deploy User's Authorized Key to Root
+  authorized_key: user=root key="{{ lookup('file', pubkey) }}"
+  when: phase == 1
+
+- stat: path=/tmp/storage_completed
+  register: storage_completed
+  when: phase == 1
+- include: storage.yml
+  when: phase == 1 and storage_completed.stat.exists == False
+
+- stat: path=/tmp/chroot_completed
+  register: chroot_completed
+  when: phase == 1
+
+- include: prepchroot.yml
+  when: phase == 1 and chroot_completed.stat.exists == False
+
+- stat: path=/tmp/kernel_completed
+  register: kernel_completed
+  when: phase == 1
+
+- include: kernel.yml
+  when: phase == 1 and kernel_completed.stat.exists == False
+
+- include: networking.yml
+  when: phase == 1
+- include: system.yml
+  when: phase == 1
+- include: packages.yml
+  when: phase == 1
+- include: reboot.yml
+  when: phase == 1
+
+# Phase 2
+# Install has been booted
+# Finish the install
+
+- include: systemupdate.yml
+  when: phase == 2

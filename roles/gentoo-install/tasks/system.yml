@@ -1,0 +1,28 @@
+- name: Install System Packages
+  command: chroot /mnt/gentoo bash -c 'source /etc/profile; emerge {{ item.name }}' creates={{ item.creates }}
+  with_items:
+    - name: eix
+      creates: /mnt/gentoo/usr/bin/eix
+    - name: gentoolkit
+      creates: /mnt/gentoo/usr/bin/equery
+    - name: syslog-ng
+      creates: /mnt/gentoo/usr/sbin/syslog-ng
+    - name: cronie
+      creates: /mnt/gentoo/etc/init.d/cronie
+    - name: grub
+      creates: /mnt/gentoo/usr/sbin/grub-install
+
+- name: Add syslog-ng to Default Run Configuration
+  command: chroot /mnt/gentoo bash -c 'rc-update add syslog-ng default'
+
+- name: Add cronie to Default Run Configuration
+  command: chroot /mnt/gentoo bash -c 'rc-update add cronie default'
+
+- name: Install Grub to Boot Drive
+  command: chroot /mnt/gentoo bash -c 'source /etc/profile; grub-install {{ main_disk }}'
+
+- name: Configure Grub Make Config
+  command: chroot /mnt/gentoo bash -c 'source /etc/profile; grub-mkconfig -o /boot/grub/grub.cfg'
+
+- name: Set Root Password
+  command: chroot /mnt/gentoo bash -c 'source /etc/profile; echo "root:{{ root_passwd }}" | /usr/sbin/chpasswd'

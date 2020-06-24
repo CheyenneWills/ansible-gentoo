@@ -1,0 +1,52 @@
+- name: Current kernel
+  stat:
+    path: /usr/src/linux
+  register: current_kernel
+
+- name: Update system
+  portage:
+    package: '@world'
+    update: yes
+    deep: yes
+    sync: yes
+    changed_use: yes
+
+- name: Install additional packages
+  portage:
+    package: "{{ additional_packages }}"
+    present: yes
+
+- name: Check kernel
+  stat:
+    path: /usr/src/linux
+  register: check_kernel
+
+# If kernel was updated
+- name: Copy config
+  copy:
+    src: "{{ current_kernel.stat.lnk_source }}/.config"
+    dest: "/usr/src/linux"
+    remote_src: yes
+  when: current_kernel.stat.lnk_source != check_kernel.stat.lnk_source
+
+# Grrr mount module is used to manipulate /etc/fstab.  Just want to mount 
+# /boot
+- name: Mount boot 
+  command: mount /boot
+
+# Build new kernel if needed
+- name: Update kernel config
+  make:
+    chdir: /usr/src/linux
+    target: olddefconfig
+  when: current_kernel.stat.lnk_source != check_kernel.stat.lnk_source
+
+- name: Make and install the kernel
+  make:
+    chdir: /usr/src/linux
+    target: bzImage modules install modules_install
+  when: current_kernel.stat.lnk_source != check_kernel.stat.lnk_source
+
+- name: Update grub
+  command: 'grub-mkconfig -o /boot/grub/grub.cfg'
+  when: current_kernel.stat.lnk_source != check_kernel.stat.lnk_source

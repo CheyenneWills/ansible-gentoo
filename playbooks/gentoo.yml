@@ -2,4 +2,9 @@
 # file: site.yml
 - hosts: all
   roles:
-    - gentoo
+    - role: gentoo-install
+      vars:
+        phase: 1
+    - role: gentoo-install
+      vars:
+        phase: 2
